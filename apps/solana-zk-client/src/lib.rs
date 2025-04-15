@@ -3,7 +3,7 @@ use selector::ZkvmSelectorType;
 
 use anchor_client::{
     solana_sdk::{
-        commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Keypair, signer::Signer,
+        commitment_config::CommitmentConfig, pubkey::Pubkey, signer::Signer,
         system_program,
     },
     Client, Cluster, Program,
@@ -38,21 +38,12 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
 
     /// Initialize a new counter account for tracking ZKVM verifiers
     pub async fn initialize(&self) -> Result<String> {
-        // Ensure the payer is the program's upgrade authority
-        self.require_upgrade_authority().await?;
-
-        let (program_data, _) = Pubkey::find_program_address(
-            &[ID.as_ref()],
-            &solana_program::bpf_loader_upgradeable::ID,
-        );
-
         let signature = self
             .program
             .request()
             .accounts(accounts::Initialize {
                 payer: self.program.payer(),
                 counter: self.counter,
-                program_data,
                 system_program: system_program::ID,
             })
             .args(instruction::Initialize {})

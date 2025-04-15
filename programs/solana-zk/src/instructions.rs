@@ -16,15 +16,6 @@ pub struct Initialize<'info> {
     )]
     pub counter: Account<'info, Counter>,
 
-    /// CHECK: This is the program data account for the current program
-    #[account(
-        constraint = program_data.key() == Pubkey::find_program_address(
-            &[crate::ID.as_ref()],
-            &bpf_loader_upgradeable::id()
-        ).0
-    )]
-    pub program_data: AccountInfo<'info>,
-
     pub system_program: Program<'info, System>,
 }
 

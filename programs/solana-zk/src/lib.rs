@@ -18,11 +18,6 @@ pub mod solana_zk {
     use super::*;
 
     pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        // Check if the owner is the program's upgrade authority
-        if !check_program_upgrade_authority(&ctx.accounts.program_data, &ctx.accounts.payer.key()) {
-            return err!(ZkError::Unauthorized);
-        }
-        
         let counter = &mut ctx.accounts.counter;
         counter.count = 0;
 
