@@ -1,6 +1,10 @@
 pub mod selector;
 use selector::ZkvmSelectorType;
 
+pub mod verify;
+use verify::risc0::risc0_verify_instruction_data;
+use verify::succinct::sp1_groth16_verify_instruction_data;
+
 use anchor_client::{
     solana_sdk::{
         commitment_config::CommitmentConfig, pubkey::Pubkey, signer::Signer,
@@ -12,6 +16,7 @@ use anyhow::{Error, Result};
 use solana_zk::{accounts, instruction, ID};
 use std::ops::Deref;
 
+// TEMP
 pub const RISC0_VERIFIER_ROUTER_ID: Pubkey =
     Pubkey::from_str_const("5HrF6mJAaSFdAym2xZixowzVifPyyzTuTs3viYKdjy4s");
 pub const SUCCINCT_SPI_VERIFIER_ID: Pubkey =
@@ -175,10 +180,6 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
 
         let (verifier_account, _bump) =
             self.derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
-        let (program_data, _) = Pubkey::find_program_address(
-            &[ID.as_ref()],
-            &solana_program::bpf_loader_upgradeable::ID,
-        );
 
         // Check if verifier exists
         let verifier = self
@@ -191,7 +192,22 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
             return Err(Error::msg("ZKVM verifier is frozen"));
         }
 
-        let instruction_data: Vec<u8> = vec![];
+        let instruction_data: Vec<u8> = match zkvm_selector {
+            ZkvmSelectorType::RiscZero => {
+                risc0_verify_instruction_data(
+                    &proof_data,
+                    program_vkey,
+                    output_digest,
+                )
+            },
+            ZkvmSelectorType::Succinct => {
+                sp1_groth16_verify_instruction_data(
+                    &proof_data, 
+                    program_vkey, 
+                    output_digest
+                )
+            }
+        };
 
         let signature = self
             .program
