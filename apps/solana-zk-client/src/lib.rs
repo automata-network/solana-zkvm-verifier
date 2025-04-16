@@ -7,8 +7,7 @@ use verify::succinct::sp1_groth16_verify_instruction_data;
 
 use anchor_client::{
     solana_sdk::{
-        commitment_config::CommitmentConfig, pubkey::Pubkey, signer::Signer,
-        system_program,
+        commitment_config::CommitmentConfig, pubkey::Pubkey, signer::Signer, system_program,
     },
     Client, Cluster, Program,
 };
@@ -59,12 +58,19 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
     }
 
     /// Add a new ZKVM verifier program
-    pub async fn add_zk_verifier_program(&self, zkvm_selector: ZkvmSelectorType) -> Result<String> {
+    pub async fn add_zk_verifier_program(
+        &self,
+        zkvm_selector: ZkvmSelectorType,
+        overwrite_zkvm_verifier_pubkey: Option<Pubkey>,
+    ) -> Result<String> {
         // Ensure the payer is the program's upgrade authority
         self.require_upgrade_authority().await?;
 
         let zkvm_selector_u64 = zkvm_selector.to_u64();
-        let zkvm_verifier_program = zkvm_selector.to_zkvm_verifier_id();
+        let zkvm_verifier_program = match overwrite_zkvm_verifier_pubkey {
+            Some(pubkey) => pubkey,
+            None => zkvm_selector.to_zkvm_verifier_id(),
+        };
 
         let (verifier_account, _bump) =
             self.derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
@@ -97,12 +103,16 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
     pub async fn update_zk_verifier_program(
         &self,
         zkvm_selector: ZkvmSelectorType,
+        overwrite_zkvm_verifier_pubkey: Option<Pubkey>,
     ) -> Result<String> {
         // Ensure the payer is the program's upgrade authority
         self.require_upgrade_authority().await?;
 
         let zkvm_selector_u64 = zkvm_selector.to_u64();
-        let zkvm_verifier_program = zkvm_selector.to_zkvm_verifier_id();
+        let zkvm_verifier_program = match overwrite_zkvm_verifier_pubkey {
+            Some(pubkey) => pubkey,
+            None => zkvm_selector.to_zkvm_verifier_id(),
+        };
 
         let (verifier_account, _bump) =
             self.derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
@@ -133,13 +143,17 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
     pub async fn freeze_zk_verifier_program(
         &self,
         zkvm_selector: ZkvmSelectorType,
+        overwrite_zkvm_verifier_pubkey: Option<Pubkey>,
         freeze: bool,
     ) -> Result<String> {
         // Ensure the payer is the program's upgrade authority
         self.require_upgrade_authority().await?;
 
         let zkvm_selector_u64 = zkvm_selector.to_u64();
-        let zkvm_verifier_program = zkvm_selector.to_zkvm_verifier_id();
+        let zkvm_verifier_program = match overwrite_zkvm_verifier_pubkey {
+            Some(pubkey) => pubkey,
+            None => zkvm_selector.to_zkvm_verifier_id(),
+        };
 
         let (verifier_account, _bump) =
             self.derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
@@ -171,12 +185,16 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
     pub async fn verify_zkvm_proof(
         &self,
         zkvm_selector: ZkvmSelectorType,
+        overwrite_zkvm_verifier_pubkey: Option<Pubkey>,
         program_vkey: [u8; 32],
         output_digest: [u8; 32],
         proof_data: Vec<u8>,
     ) -> Result<String> {
         let zkvm_selector_u64 = zkvm_selector.to_u64();
-        let zkvm_verifier_program = zkvm_selector.to_zkvm_verifier_id();
+        let zkvm_verifier_program = match overwrite_zkvm_verifier_pubkey {
+            Some(pubkey) => pubkey,
+            None => zkvm_selector.to_zkvm_verifier_id(),
+        };
 
         let (verifier_account, _bump) =
             self.derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
@@ -194,18 +212,10 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
 
         let instruction_data: Vec<u8> = match zkvm_selector {
             ZkvmSelectorType::RiscZero => {
-                risc0_verify_instruction_data(
-                    &proof_data,
-                    program_vkey,
-                    output_digest,
-                )
-            },
+                risc0_verify_instruction_data(&proof_data, program_vkey, output_digest)
+            }
             ZkvmSelectorType::Succinct => {
-                sp1_groth16_verify_instruction_data(
-                    &proof_data, 
-                    program_vkey, 
-                    output_digest
-                )
+                sp1_groth16_verify_instruction_data(&proof_data, program_vkey, output_digest)
             }
         };
 
@@ -292,11 +302,7 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
     }
 }
 
-
 /// Helper method to derive the PDA for the Counter
 fn derive_counter_pda() -> (Pubkey, u8) {
-    Pubkey::find_program_address(
-        &[b"counter"],
-        &ID,
-    )
+    Pubkey::find_program_address(&[b"counter"], &ID)
 }

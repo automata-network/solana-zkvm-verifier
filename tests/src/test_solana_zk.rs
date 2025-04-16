@@ -38,7 +38,10 @@ async fn test_config_zkvm_verifier(client: &SolanaZkClient<&Keypair>) {
     let (zkvm_verifier_config_pda_id, _) = client
         .derive_zkvm_verifier_pda(zkvm_selector.to_u64(), &zkvm_selector.to_zkvm_verifier_id());
 
-    client.add_zk_verifier_program(zkvm_selector).await.unwrap();
+    client
+        .add_zk_verifier_program(zkvm_selector, None)
+        .await
+        .unwrap();
 
     // Fetch the counter account data
     let counter_account = client
