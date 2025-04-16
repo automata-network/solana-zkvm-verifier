@@ -188,7 +188,7 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
         overwrite_zkvm_verifier_pubkey: Option<Pubkey>,
         program_vkey: [u8; 32],
         output_digest: [u8; 32],
-        proof_data: Vec<u8>,
+        proof_data: &[u8],
     ) -> Result<String> {
         let zkvm_selector_u64 = zkvm_selector.to_u64();
         let zkvm_verifier_program = match overwrite_zkvm_verifier_pubkey {

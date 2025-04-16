@@ -13,12 +13,16 @@ use std::{fs, ops::Add};
 pub mod risc0;
 
 /// Deploy a program to the test validator using its binary (.so) file
-pub async fn deploy_program(payer: &Keypair, client: &RpcClient, program_path: &str) -> Result<Pubkey> {
+pub async fn deploy_program(
+    payer: &Keypair, 
+    client: &RpcClient, 
+    program_path: &str,
+    program_keypair: Keypair
+) -> Result<Pubkey> {
     // Load the program binary
     let program_data = fs::read(program_path)?;
 
     // Create a new program keypair
-    let program_keypair = Keypair::new();
     let program_id = program_keypair.pubkey();
 
     // Create a buffer account

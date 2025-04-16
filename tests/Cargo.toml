@@ -5,8 +5,9 @@ description = "Created with Anchor"
 edition = "2021"
 
 [dependencies]
-anchor-client = "0.31.0"
+anchor-client = { version = "0.31.0" }
 tokio = { version = "1.39.0", features = ["full"] }
 solana-zk = { path = "../programs/solana-zk" }
 solana-zk-client = { path = "../apps/solana-zk-client" }
-anyhow = "1.0.80"
+hex = { version = "0.4.3" }
+anyhow = { version = "1.0.80" }
