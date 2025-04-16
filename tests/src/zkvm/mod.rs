@@ -3,6 +3,7 @@ use anchor_client::{
     solana_sdk::{
         bpf_loader_upgradeable,
         pubkey::Pubkey,
+        signature::Signature,
         signature::{Keypair, Signer},
         transaction::Transaction,
     },
@@ -14,10 +15,10 @@ pub mod risc0;
 
 /// Deploy a program to the test validator using its binary (.so) file
 pub async fn deploy_program(
-    payer: &Keypair, 
-    client: &RpcClient, 
+    payer: &Keypair,
+    client: &RpcClient,
     program_path: &str,
-    program_keypair: Keypair
+    program_keypair: Keypair,
 ) -> Result<Pubkey> {
     // Load the program binary
     let program_data = fs::read(program_path)?;
@@ -55,10 +56,13 @@ pub async fn deploy_program(
         client.get_latest_blockhash().await?,
     );
 
-    client.send_and_confirm_transaction(&create_buffer_tx).await?;
+    client
+        .send_and_confirm_transaction(&create_buffer_tx)
+        .await?;
 
     // Write program data to buffer in chunks
     const CHUNK_SIZE: usize = 900; // Solana has a limit on transaction size
+    let mut handles: Vec<Signature> = Vec::with_capacity(program_len / CHUNK_SIZE);
 
     for (i, chunk) in program_data.chunks(CHUNK_SIZE).enumerate() {
         let offset = i * CHUNK_SIZE;
@@ -70,14 +74,27 @@ pub async fn deploy_program(
             chunk.to_vec(),
         );
 
+        let blockhash = client.get_latest_blockhash().await?;
+
         let write_tx = Transaction::new_signed_with_payer(
             &[write_ix],
             Some(&payer.pubkey()),
             &[payer],
-            client.get_latest_blockhash().await?,
+            blockhash,
         );
 
-        client.send_and_confirm_transaction(&write_tx).await?;
+        let signature = client.send_transaction(&write_tx).await?;
+        handles.push(signature);
+    }
+
+    // Wait for all transactions to be confirmed
+    for signature in handles {
+        loop {
+            let confirmed = client.confirm_transaction(&signature).await?;
+            if confirmed {
+                break;
+            }
+        }
     }
 
     // Deploy the program from the buffer
