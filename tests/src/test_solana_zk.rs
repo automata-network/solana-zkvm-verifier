@@ -1,15 +1,25 @@
 use super::*;
-use anchor_client::solana_sdk::{
-    signature::read_keypair_file,
-    signer::{keypair::Keypair, Signer},
-};
+use anchor_client::solana_sdk::signature::read_keypair_file;
 use solana_zk_client::{selector::ZkvmSelectorType, RISC0_VERIFIER_ROUTER_ID};
 
 #[tokio::test]
-async fn test_initialize() {
+async fn test_solana_zk_program() {
     let anchor_wallet = std::env::var("ANCHOR_WALLET").unwrap();
     let payer = read_keypair_file(&anchor_wallet).unwrap();
     let client = setup(&payer);
+
+    println!("====== TESTING SOLANA ZK PROGRAM ===");
+
+    println!("====== test_initialize ======");
+    test_initialize(&client).await;
+    println!("====== test_initialize ====== DONE");
+
+    println!("====== test_config_zkvm_verifier ======");
+    test_config_zkvm_verifier(&client).await;
+    println!("====== test_config_zkvm_verifier ====== DONE");
+}
+
+async fn test_initialize(client: &SolanaZkClient<&Keypair>) {
     client.initialize().await.expect("Failed to initialize");
 
     // Fetch the counter account data
@@ -22,12 +32,7 @@ async fn test_initialize() {
     assert_eq!(counter_account.count, 0);
 }
 
-#[tokio::test]
-async fn test_config_zkvm_verifier() {
-    let anchor_wallet = std::env::var("ANCHOR_WALLET").unwrap();
-    let payer = read_keypair_file(&anchor_wallet).unwrap();
-    let client = setup(&payer);
-
+async fn test_config_zkvm_verifier(client: &SolanaZkClient<&Keypair>) {
     // Fetch the zkvm verifier PDA
     let zkvm_selector = ZkvmSelectorType::RiscZero;
     let (zkvm_verifier_config_pda_id, _) = client

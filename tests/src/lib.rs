@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod test_config;
+mod test_solana_zk;
 
 use anchor_client::solana_sdk::signature::Keypair;
 use solana_zk_client::SolanaZkClient;
