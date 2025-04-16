@@ -9,3 +9,4 @@ anchor-client = "0.31.0"
 tokio = { version = "1.39.0", features = ["full"] }
 solana-zk = { path = "../programs/solana-zk" }
 solana-zk-client = { path = "../apps/solana-zk-client" }
+anyhow = "1.0.80"

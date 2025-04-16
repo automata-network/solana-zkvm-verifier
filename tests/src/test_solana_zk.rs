@@ -1,4 +1,5 @@
 use super::*;
+use crate::zkvm::risc0::deploy_risc0_groth16_verifier;
 use anchor_client::solana_sdk::signature::read_keypair_file;
 use solana_zk_client::{selector::ZkvmSelectorType, RISC0_VERIFIER_ROUTER_ID};
 
@@ -14,9 +15,9 @@ async fn test_solana_zk_program() {
     test_initialize(&client).await;
     println!("====== test_initialize ====== DONE");
 
-    println!("====== test_config_zkvm_verifier ======");
-    test_config_zkvm_verifier(&client).await;
-    println!("====== test_config_zkvm_verifier ====== DONE");
+    println!("====== test_config_risc0 ======");
+    test_config_risc0(&client, &payer).await;
+    println!("====== test_config_risc0 ====== DONE");
 }
 
 async fn test_initialize(client: &SolanaZkClient<&Keypair>) {
@@ -32,14 +33,20 @@ async fn test_initialize(client: &SolanaZkClient<&Keypair>) {
     assert_eq!(counter_account.count, 0);
 }
 
-async fn test_config_zkvm_verifier(client: &SolanaZkClient<&Keypair>) {
+async fn test_config_risc0(client: &SolanaZkClient<&Keypair>, payer: &Keypair) {
+    // deploy the RiscZero Groth16 Verifier program
+    let rpc_client = get_rpc_client();
+    let zkvm_verifier_program_id = deploy_risc0_groth16_verifier(&payer, &rpc_client)
+        .await
+        .expect("Failed to deploy Risc0 Groth16 Verifier program");
+
     // Fetch the zkvm verifier PDA
     let zkvm_selector = ZkvmSelectorType::RiscZero;
-    let (zkvm_verifier_config_pda_id, _) = client
-        .derive_zkvm_verifier_pda(zkvm_selector.to_u64(), &zkvm_selector.to_zkvm_verifier_id());
+    let (zkvm_verifier_config_pda_id, _) =
+        client.derive_zkvm_verifier_pda(zkvm_selector.to_u64(), &zkvm_verifier_program_id);
 
     client
-        .add_zk_verifier_program(zkvm_selector, None)
+        .add_zk_verifier_program(zkvm_selector, Some(zkvm_verifier_program_id))
         .await
         .unwrap();
 
@@ -60,7 +67,7 @@ async fn test_config_zkvm_verifier(client: &SolanaZkClient<&Keypair>) {
     assert_eq!(counter_account.count, 1);
     assert_eq!(
         zkvm_verifier_config_pda.zkvm_program_id,
-        RISC0_VERIFIER_ROUTER_ID
+        zkvm_verifier_program_id
     );
     assert_eq!(
         zkvm_verifier_config_pda.zkvm_selector,
