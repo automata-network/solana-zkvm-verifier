@@ -4,7 +4,7 @@ pub mod verify;
 // TEMP
 pub const RISC0_VERIFIER_ROUTER_ID: Pubkey =
     Pubkey::from_str_const("5HrF6mJAaSFdAym2xZixowzVifPyyzTuTs3viYKdjy4s");
-pub const SUCCINCT_SPI_VERIFIER_ID: Pubkey =
+pub const SUCCINCT_SP1_VERIFIER_ID: Pubkey =
     Pubkey::from_str_const("2LUaFQTJ7F96A5x1z5sXfbDPM2asGnrQ2hsE6zVDMhXZ");
 
 // Other modules and imports are conditionally included

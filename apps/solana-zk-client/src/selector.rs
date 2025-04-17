@@ -1,7 +1,7 @@
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use super::{
     RISC0_VERIFIER_ROUTER_ID,
-    SUCCINCT_SPI_VERIFIER_ID
+    SUCCINCT_SP1_VERIFIER_ID
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -22,7 +22,7 @@ impl ZkvmSelectorType {
     pub fn to_zkvm_verifier_id(&self) -> Pubkey {
         match self {
             ZkvmSelectorType::RiscZero => RISC0_VERIFIER_ROUTER_ID,
-            ZkvmSelectorType::Succinct => SUCCINCT_SPI_VERIFIER_ID,
+            ZkvmSelectorType::Succinct => SUCCINCT_SP1_VERIFIER_ID,
         }
     }
 }
