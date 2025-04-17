@@ -1,7 +1,7 @@
 // The verify module is always included
 pub mod verify;
 
-use anchor_client::solana_sdk::pubkey::Pubkey;
+use solana_program::pubkey::Pubkey;
 
 // TEMP
 pub const RISC0_VERIFIER_ROUTER_ID: Pubkey =
