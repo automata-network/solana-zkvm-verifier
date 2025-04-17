@@ -1,6 +1,8 @@
 // The verify module is always included
 pub mod verify;
 
+use anchor_client::solana_sdk::pubkey::Pubkey;
+
 // TEMP
 pub const RISC0_VERIFIER_ROUTER_ID: Pubkey =
     Pubkey::from_str_const("5HrF6mJAaSFdAym2xZixowzVifPyyzTuTs3viYKdjy4s");
@@ -22,7 +24,7 @@ use verify::succinct::sp1_groth16_verify_instruction_data;
 #[cfg(feature = "client")]
 use anchor_client::{
     solana_sdk::{
-        commitment_config::CommitmentConfig, pubkey::Pubkey, signer::Signer, system_program,
+        commitment_config::CommitmentConfig, signer::Signer, system_program,
     },
     Client, Cluster, Program,
 };
