@@ -17,3 +17,6 @@ wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "cargo test -- --nocapture"
+
+[test]
+upgradeable = true
