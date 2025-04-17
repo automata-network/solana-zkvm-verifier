@@ -1,19 +1,5 @@
-pub mod selector;
-use selector::ZkvmSelectorType;
-
+// The verify module is always included
 pub mod verify;
-use verify::risc0::risc0_verify_instruction_data;
-use verify::succinct::sp1_groth16_verify_instruction_data;
-
-use anchor_client::{
-    solana_sdk::{
-        commitment_config::CommitmentConfig, pubkey::Pubkey, signer::Signer, system_program,
-    },
-    Client, Cluster, Program,
-};
-use anyhow::{Error, Result};
-use solana_zk::{accounts, instruction, ID};
-use std::ops::Deref;
 
 // TEMP
 pub const RISC0_VERIFIER_ROUTER_ID: Pubkey =
@@ -21,12 +7,39 @@ pub const RISC0_VERIFIER_ROUTER_ID: Pubkey =
 pub const SUCCINCT_SPI_VERIFIER_ID: Pubkey =
     Pubkey::from_str_const("2LUaFQTJ7F96A5x1z5sXfbDPM2asGnrQ2hsE6zVDMhXZ");
 
+// Other modules and imports are conditionally included
+#[cfg(feature = "client")]
+pub mod selector;
+#[cfg(feature = "client")]
+use selector::ZkvmSelectorType;
+
+#[cfg(feature = "client")]
+use verify::risc0::risc0_verify_instruction_data;
+#[cfg(feature = "client")]
+use verify::succinct::sp1_groth16_verify_instruction_data;
+
+// Conditionally include client-specific imports
+#[cfg(feature = "client")]
+use anchor_client::{
+    solana_sdk::{
+        commitment_config::CommitmentConfig, pubkey::Pubkey, signer::Signer, system_program,
+    },
+    Client, Cluster, Program,
+};
+#[cfg(feature = "client")]
+use anyhow::{Error, Result};
+use solana_zk::{accounts, instruction, ID};
+#[cfg(feature = "client")]
+use std::ops::Deref;
+
 /// Client for interacting with the Solana ZK program
+#[cfg(feature = "client")]
 pub struct SolanaZkClient<C> {
     program: Program<C>,
     counter: Pubkey,
 }
 
+#[cfg(feature = "client")]
 impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
     /// Create a new client instance
     pub fn new(payer: C, cluster: Option<Cluster>) -> Self {
@@ -303,6 +316,7 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
 }
 
 /// Helper method to derive the PDA for the Counter
+#[cfg(feature = "client")]
 fn derive_counter_pda() -> (Pubkey, u8) {
     Pubkey::find_program_address(&[b"counter"], &ID)
 }

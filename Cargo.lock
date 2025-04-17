@@ -5614,7 +5614,6 @@ dependencies = [
  "anyhow",
  "solana-program",
  "solana-zk",
- "thiserror 1.0.69",
 ]
 
 [[package]]

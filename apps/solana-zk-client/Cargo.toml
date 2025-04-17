@@ -4,11 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anchor-client = { version = "0.31.0", features = ["async"] }
-anyhow = "1.0"
-solana-program = "^2.2.1"
-thiserror = "1.0"
+# Only include for non-Solana targets
+anchor-client = { version = "0.31.0", features = ["async"], optional = true }
+anyhow = { version = "1.0", optional = true }
+solana-program = { version = "^2.2.1", optional = true }
+
+# Include for all targets
 solana-zk = { path = "../../programs/solana-zk", features = ["no-entrypoint"] }
 
 [features]
-default = []
+default = ["client"]
+client = ["dep:anchor-client", "dep:anyhow", "dep:solana-program"]
