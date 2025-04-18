@@ -1,5 +1,6 @@
 // The verify module is always included
 pub mod verify;
+pub use solana_zk::ID;
 
 use solana_program::pubkey::Pubkey;
 
@@ -8,6 +9,21 @@ pub const RISC0_VERIFIER_ROUTER_ID: Pubkey =
     Pubkey::from_str_const("5HrF6mJAaSFdAym2xZixowzVifPyyzTuTs3viYKdjy4s");
 pub const SUCCINCT_SP1_VERIFIER_ID: Pubkey =
     Pubkey::from_str_const("2LUaFQTJ7F96A5x1z5sXfbDPM2asGnrQ2hsE6zVDMhXZ");
+
+/// Helper method to derive the PDA for a ZKVM verifier account
+pub fn derive_zkvm_verifier_pda(
+    zkvm_selector: u64,
+    zkvm_verifier_program: &Pubkey,
+) -> (Pubkey, u8) {
+    Pubkey::find_program_address(
+        &[
+            b"zkvm_verifier",
+            zkvm_selector.to_le_bytes().as_ref(),
+            zkvm_verifier_program.as_ref(),
+        ],
+        &ID,
+    )
+}
 
 // Other modules and imports are conditionally included
 #[cfg(feature = "client")]
@@ -30,7 +46,7 @@ use anchor_client::{
 };
 #[cfg(feature = "client")]
 use anyhow::{Error, Result};
-use solana_zk::{accounts, instruction, ID};
+use solana_zk::{accounts, instruction};
 #[cfg(feature = "client")]
 use std::ops::Deref;
 
@@ -88,7 +104,7 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
         };
 
         let (verifier_account, _bump) =
-            self.derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
+            derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
         let (program_data, _) = Pubkey::find_program_address(
             &[ID.as_ref()],
             &solana_program::bpf_loader_upgradeable::ID,
@@ -130,7 +146,7 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
         };
 
         let (verifier_account, _bump) =
-            self.derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
+            derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
         let (program_data, _) = Pubkey::find_program_address(
             &[ID.as_ref()],
             &solana_program::bpf_loader_upgradeable::ID,
@@ -171,7 +187,7 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
         };
 
         let (verifier_account, _bump) =
-            self.derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
+            derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
         let (program_data, _) = Pubkey::find_program_address(
             &[ID.as_ref()],
             &solana_program::bpf_loader_upgradeable::ID,
@@ -212,7 +228,7 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
         };
 
         let (verifier_account, _bump) =
-            self.derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
+            derive_zkvm_verifier_pda(zkvm_selector_u64, &zkvm_verifier_program);
 
         // Check if verifier exists
         let verifier = self
@@ -250,22 +266,6 @@ impl<C: Clone + Deref<Target = impl Signer>> SolanaZkClient<C> {
             .await?;
 
         Ok(signature.to_string())
-    }
-
-    /// Helper method to derive the PDA for a ZKVM verifier account
-    pub fn derive_zkvm_verifier_pda(
-        &self,
-        zkvm_selector: u64,
-        zkvm_verifier_program: &Pubkey,
-    ) -> (Pubkey, u8) {
-        Pubkey::find_program_address(
-            &[
-                b"zkvm_verifier",
-                zkvm_selector.to_le_bytes().as_ref(),
-                zkvm_verifier_program.as_ref(),
-            ],
-            &ID,
-        )
     }
 
     /// Get the program instance

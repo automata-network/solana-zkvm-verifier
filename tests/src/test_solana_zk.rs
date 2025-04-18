@@ -2,6 +2,7 @@ use super::*;
 use crate::zkvm::risc0::deploy_risc0_groth16_verifier;
 use anchor_client::solana_sdk::{pubkey::Pubkey, signature::read_keypair_file};
 use solana_zk_client::selector::ZkvmSelectorType;
+use solana_zk_client::derive_zkvm_verifier_pda;
 
 #[tokio::test]
 async fn test_solana_zk_program() {
@@ -47,7 +48,7 @@ async fn test_config_risc0(client: &SolanaZkClient<&Keypair>, payer: &Keypair) -
     // Fetch the zkvm verifier PDA
     let zkvm_selector = ZkvmSelectorType::RiscZero;
     let (zkvm_verifier_config_pda_id, _) =
-        client.derive_zkvm_verifier_pda(zkvm_selector.to_u64(), &zkvm_verifier_program_id);
+        derive_zkvm_verifier_pda(zkvm_selector.to_u64(), &zkvm_verifier_program_id);
 
     client
         .add_zk_verifier_program(zkvm_selector, Some(zkvm_verifier_program_id))
